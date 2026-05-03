@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { ComingSoon } from '@/components/coming-soon';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Check, Upload, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -72,6 +73,12 @@ const slideVariants = {
 
 /* ─── main component ─── */
 export default function OnboardPage() {
+  // TODO: Set to false to re-enable the onboarding wizard
+  return <ComingSoon title="List Your Hardware" description="Supplier onboarding is coming soon. Describe your GPU node, run diagnostics, set pricing, and go live on the marketplace." />;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function OnboardPageContent() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);

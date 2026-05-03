@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { ComingSoon } from '@/components/coming-soon';
 import { cn } from '@/lib/utils';
 import { listings } from '@/lib/mock';
 import { ArrowLeft, Pencil, Star, DollarSign, Activity, Users, TrendingUp } from 'lucide-react';
@@ -52,7 +53,14 @@ function generateRecentRentals(listingId: string) {
   }));
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export default function ListingDetailPage({ params }: { params: { id: string } }) {
+  // TODO: Set to false to re-enable listing analytics
+  return <ComingSoon title="Listing Analytics" description="Listing analytics is coming soon. Track utilization, revenue, and renter activity for each of your GPU nodes." />;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function ListingDetailPageContent({ params }: { params: { id: string } }) {
   const { id } = params;
   const listing = listings.find(l => l.id === id);
 

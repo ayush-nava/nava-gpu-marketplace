@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { ComingSoon } from '@/components/coming-soon';
 import {
   Server,
   Activity,
@@ -155,6 +156,12 @@ function EmptyState() {
 /* ─── Main Page ─── */
 
 export default function SupplyDashboardPage() {
+  // TODO: Set to false to re-enable the supply dashboard
+  return <ComingSoon title="Supply Dashboard" description="The supplier dashboard is coming soon. List your GPU hardware, track rentals, and monitor earnings — all from one place." />;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function SupplyDashboardPageContent() {
   const hasListings = myListings.length > 0;
 
   const totalListings = myListings.length;
