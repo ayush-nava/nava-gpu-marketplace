@@ -27,13 +27,13 @@ const demandSteps = [
   },
   {
     number: '02',
-    title: 'Reserve & SSH in',
-    description: 'Pick a time window, confirm, and get root SSH access to bare metal within minutes.',
+    title: 'Deploy models or SSH in',
+    description: 'Deploy Llama, Qwen, DeepSeek with one click — or get root SSH access to bare metal in minutes.',
   },
   {
     number: '03',
     title: 'Pay for what you use',
-    description: 'Per-hour billing. No commitments, no reserved-instance lock-in, no surprise fees.',
+    description: 'Per-hour billing with managed model deployment. No commitments, no reserved-instance lock-in.',
   },
 ];
 

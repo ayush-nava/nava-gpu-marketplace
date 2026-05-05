@@ -7,6 +7,7 @@ import { ArrowLeft, ExternalLink } from 'lucide-react';
 import { rentals, listings } from '@/lib/mock';
 import { useFakeTelemetry } from '@/hooks/use-fake-telemetry';
 import { TelemetryCard } from '@/components/telemetry-card';
+import { ModelDeployCard } from '@/components/model-deploy-card';
 import { CommandSnippet } from '@/components/ui/command-snippet';
 import { MonoStat } from '@/components/ui/mono-stat';
 import { TerminalLog } from '@/components/ui/terminal-log';
@@ -247,6 +248,17 @@ export default function ActiveSessionPage({ params }: { params: { id: string } }
                 </span>
               </div>
             </div>
+          </div>
+
+          {/* Model Deployment */}
+          <div className="space-y-2">
+            <h3 className="text-xs text-tertiary uppercase tracking-wide">Model Deployment</h3>
+            <ModelDeployCard
+              gpuModel={listing.gpu.model}
+              gpuCount={listing.gpu.count}
+              vramPerGPU={listing.gpu.vramGB}
+              pricePerHour={listing.pricePerHour}
+            />
           </div>
         </div>
       </div>

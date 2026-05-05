@@ -12,6 +12,7 @@ import { MonoStat } from '@/components/ui/mono-stat';
 import { SpecTable } from '@/components/ui/spec-table';
 import { TopologyDiagram } from '@/components/topology-diagram';
 import { AvailabilityStrip } from '@/components/availability-strip';
+import { ModelDeployCard } from '@/components/model-deploy-card';
 import {
   Select,
   SelectContent,
@@ -292,6 +293,18 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* Model Deployment */}
+            <div className="space-y-2">
+              <label className="text-xs text-tertiary uppercase tracking-wide">Model Deployment</label>
+              <ModelDeployCard
+                gpuModel={listing.gpu.model}
+                gpuCount={listing.gpu.count}
+                vramPerGPU={listing.gpu.vramGB}
+                pricePerHour={listing.pricePerHour}
+                compact
+              />
             </div>
 
             {/* SSH Key */}
