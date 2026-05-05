@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { ComingSoon } from '@/components/coming-soon';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { listings } from '@/lib/mock';
@@ -32,12 +31,6 @@ function getUtilization(index: number): number {
 }
 
 export default function SupplyListingsPage() {
-  // TODO: Set to false to re-enable supply listings
-  return <ComingSoon title="Manage Listings" description="Listing management is coming soon. View, pause, and edit your GPU listings from a single dashboard." />;
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function SupplyListingsPageContent() {
   const [filter, setFilter] = useState<FilterStatus>('all');
 
   const filtered = filter === 'all'

@@ -40,15 +40,15 @@ export function AppHeader() {
     }
   };
 
-  const demandNav: { href: string; label: string; comingSoon?: boolean }[] = [
+  const demandNav = [
     { href: '/app/demand', label: 'Browse' },
     { href: '/app/demand/rentals', label: 'Rentals' },
   ];
 
-  const supplyNav: { href: string; label: string; comingSoon?: boolean }[] = [
-    { href: '/app/supply', label: 'Dashboard', comingSoon: true },
-    { href: '/app/supply/listings', label: 'Listings', comingSoon: true },
-    { href: '/app/supply/onboard', label: 'Add Hardware', comingSoon: true },
+  const supplyNav = [
+    { href: '/app/supply', label: 'Dashboard' },
+    { href: '/app/supply/listings', label: 'Listings' },
+    { href: '/app/supply/onboard', label: 'Add Hardware' },
   ];
 
   const nav = portal === 'demand' ? demandNav : supplyNav;
@@ -75,16 +75,13 @@ export function AppHeader() {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-1.5',
+                    'px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
                     isActive
                       ? 'text-primary bg-elevated'
                       : 'text-secondary hover:text-primary hover:bg-hover'
                   )}
                 >
                   {item.label}
-                  {item.comingSoon && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#27272A] text-[#71717A] font-normal">Soon</span>
-                  )}
                 </Link>
               );
             })}
