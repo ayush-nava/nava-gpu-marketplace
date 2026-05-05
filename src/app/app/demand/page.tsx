@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Grid3X3, List, X, Pin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { listings } from '@/lib/mock';
+import { AI_MODELS } from '@/lib/mock/models';
 import { FilterState, Listing, GPUModel, Interconnect, Region } from '@/lib/types';
 import { LiveDot } from '@/components/ui/live-dot';
 import { TopologyDiagram } from '@/components/topology-diagram';
@@ -144,6 +145,7 @@ export default function DemandCataloguePage() {
   const [view, setView] = useState<'grid' | 'table'>('grid');
   const [sortBy, setSortBy] = useState<'price' | 'available' | 'trust'>('price');
   const [pinnedIds, setPinnedIds] = useState<string[]>([]);
+  const [deployModelFilter, setDeployModelFilter] = useState<string>('');
   const [filters, setFilters] = useState<FilterState>({
     gpuModels: [],
     gpuCounts: [],
@@ -172,6 +174,16 @@ export default function DemandCataloguePage() {
     }
     result = result.filter(l => l.pricePerHour <= filters.maxPricePerHour);
 
+    // Filter by model deployment compatibility
+    if (deployModelFilter) {
+      const model = AI_MODELS.find(m => m.id === deployModelFilter);
+      if (model) {
+        // Find the smallest variant of this model (INT4/AWQ) to get minimum VRAM needed
+        const minVRAM = Math.min(...model.variants.map(v => v.minVRAMGB));
+        result = result.filter(l => (l.gpu.count * l.gpu.vramGB) >= minVRAM);
+      }
+    }
+
     // Sort
     if (sortBy === 'price') {
       result.sort((a, b) => a.pricePerHour - b.pricePerHour);
@@ -183,7 +195,7 @@ export default function DemandCataloguePage() {
     }
 
     return result;
-  }, [filters, sortBy]);
+  }, [filters, sortBy, deployModelFilter]);
 
   const toggleFilter = <K extends keyof FilterState>(
     key: K,
@@ -287,6 +299,27 @@ export default function DemandCataloguePage() {
               </label>
             ))}
           </div>
+        </div>
+
+        <div>
+          <h3 className="text-xs font-medium text-tertiary uppercase tracking-wide mb-3">Deploy Model</h3>
+          <select
+            value={deployModelFilter}
+            onChange={(e) => setDeployModelFilter(e.target.value)}
+            className="w-full h-8 px-2.5 bg-[#18181B] border border-[#3F3F46] text-[#FAFAFA] rounded-[6px] text-xs outline-none focus:border-[#84CC16] appearance-none cursor-pointer"
+          >
+            <option value="">Any / None</option>
+            {AI_MODELS.map(model => (
+              <option key={model.id} value={model.id}>
+                {model.name} ({model.parameterCount})
+              </option>
+            ))}
+          </select>
+          {deployModelFilter && (
+            <p className="text-[10px] text-tertiary mt-1.5">
+              Showing GPUs with enough VRAM for at least one quantization of this model.
+            </p>
+          )}
         </div>
 
         <div>

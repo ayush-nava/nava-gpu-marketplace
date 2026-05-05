@@ -11,15 +11,6 @@ import {
   DEPLOYMENT_PRICING,
 } from '@/lib/mock/models';
 import { GPUModel } from '@/lib/types';
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 
 interface ModelDeployCardProps {
   gpuModel: string;
@@ -177,26 +168,22 @@ export function ModelDeployCard({
           {/* Model Selector */}
           <div className="space-y-1.5">
             <label className="text-[10px] uppercase tracking-wide text-[#71717A]">Model</label>
-            <Select value={selectedModelId} onValueChange={(v) => v && handleModelChange(v)}>
-              <SelectTrigger className="w-full bg-[#18181B] border-[#27272A] text-[#FAFAFA] rounded-[6px] h-8 text-xs">
-                <SelectValue placeholder="Select a model" />
-              </SelectTrigger>
-              <SelectContent className="bg-[#18181B] border-[#27272A]">
-                {Object.entries(groupedModels).map(([family, models]) => (
-                  <SelectGroup key={family}>
-                    <SelectLabel className="text-[10px] uppercase text-[#71717A] tracking-wide">
-                      {MODEL_FAMILIES[family] ?? family}
-                    </SelectLabel>
-                    {models.map((model) => (
-                      <SelectItem key={model.id} value={model.id} className="text-xs text-[#FAFAFA]">
-                        <span>{model.name}</span>
-                        <span className="ml-1.5 font-mono text-[#71717A]">{model.parameterCount}</span>
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                ))}
-              </SelectContent>
-            </Select>
+            <select
+              value={selectedModelId}
+              onChange={(e) => handleModelChange(e.target.value)}
+              className="w-full h-8 px-2.5 bg-[#18181B] border border-[#3F3F46] text-[#FAFAFA] rounded-[6px] text-xs outline-none focus:border-[#84CC16] appearance-none cursor-pointer"
+            >
+              <option value="" disabled>Select a model</option>
+              {Object.entries(groupedModels).map(([family, models]) => (
+                <optgroup key={family} label={MODEL_FAMILIES[family] ?? family}>
+                  {models.map((model) => (
+                    <option key={model.id} value={model.id}>
+                      {model.name} ({model.parameterCount})
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
           </div>
 
           {/* Quantization Selector */}

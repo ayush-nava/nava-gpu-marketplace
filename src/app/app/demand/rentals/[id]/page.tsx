@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { ArrowLeft, ExternalLink } from 'lucide-react';
 import { rentals, listings } from '@/lib/mock';
+import { AI_MODELS } from '@/lib/mock/models';
 import { useFakeTelemetry } from '@/hooks/use-fake-telemetry';
 import { TelemetryCard } from '@/components/telemetry-card';
 import { ModelDeployCard } from '@/components/model-deploy-card';
@@ -29,6 +30,9 @@ export default function ActiveSessionPage({ params }: { params: { id: string } }
   const { id } = params;
   const searchParams = useSearchParams();
   const fromListingId = searchParams.get('from');
+  const deployedModelId = searchParams.get('model');
+  const deployedVariantId = searchParams.get('variant');
+  const deployedRuntime = searchParams.get('runtime');
   
   // For rnt-new, look up the actual listing that was reserved
   const sourceListing = fromListingId 
@@ -144,6 +148,32 @@ export default function ActiveSessionPage({ params }: { params: { id: string } }
           </div>
         </div>
       </div>
+
+      {/* Deployed Model Card */}
+      {deployedModelId && (() => {
+        const model = AI_MODELS.find(m => m.id === deployedModelId);
+        const variant = model?.variants.find(v => v.id === deployedVariantId);
+        if (!model || !variant) return null;
+        return (
+          <div className="bg-surface border border-accent/30 rounded-card p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-medium text-accent uppercase tracking-wide">Deployed Model</h2>
+              <span className="px-2 py-0.5 bg-accent/10 text-accent text-xs font-mono rounded">Running</span>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <MonoStat label="Model" value={model.name} size="sm" />
+              <MonoStat label="Quantization" value={variant.quantization} size="sm" />
+              <MonoStat label="Runtime" value={deployedRuntime || 'vllm'} size="sm" />
+              <MonoStat label="Weight Size" value={`${variant.sizeGB} GB`} size="sm" />
+            </div>
+            <div className="pt-3 border-t border-border-subtle">
+              <div className="font-mono text-xs text-secondary">
+                Endpoint: <span className="text-accent">https://{rental.sshHost}:8000/v1/completions</span>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* SSH Connect Card */}
       <div className="bg-surface border border-border-subtle rounded-card p-6 space-y-4">

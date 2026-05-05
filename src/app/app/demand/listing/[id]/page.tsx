@@ -13,13 +13,6 @@ import { SpecTable } from '@/components/ui/spec-table';
 import { TopologyDiagram } from '@/components/topology-diagram';
 import { AvailabilityStrip } from '@/components/availability-strip';
 import { ModelDeployCard } from '@/components/model-deploy-card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 
 const durationOptions = [
   { value: '1', label: '1 hour' },
@@ -50,6 +43,7 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
   const [sshKey, setSshKey] = useState('');
   const [isProvisioning, setIsProvisioning] = useState(false);
   const [provisioningStep, setProvisioningStep] = useState(0);
+  const [deployConfig, setDeployConfig] = useState<{ modelId: string; variantId: string; runtime: string; useCase: string } | null>(null);
   const [activeSection, setActiveSection] = useState<Section>('Specs');
 
   if (!listing) {
@@ -78,7 +72,7 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
     }
 
     await new Promise(resolve => setTimeout(resolve, 300));
-    router.push(`/app/demand/rentals/rnt-new?from=${listing.id}`);
+    router.push(`/app/demand/rentals/rnt-new?from=${listing.id}${deployConfig ? `&model=${deployConfig.modelId}&variant=${deployConfig.variantId}&runtime=${deployConfig.runtime}` : ''}`);
   };
 
   const specs = [
@@ -281,18 +275,15 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
             {/* Image Selector */}
             <div className="space-y-2">
               <label className="text-xs text-tertiary uppercase tracking-wide">Base Image</label>
-              <Select value={selectedImage} onValueChange={(v) => v && setSelectedImage(v)}>
-                <SelectTrigger className="w-full bg-elevated border-border-default">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-surface border-border-default">
-                  {listing.images.map(image => (
-                    <SelectItem key={image.id} value={image.id}>
-                      {image.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <select
+                value={selectedImage}
+                onChange={(e) => setSelectedImage(e.target.value)}
+                className="w-full h-9 px-3 bg-[#18181B] border border-[#3F3F46] text-[#FAFAFA] rounded-md text-sm outline-none focus:border-[#84CC16] appearance-none cursor-pointer"
+              >
+                {listing.images.map(image => (
+                  <option key={image.id} value={image.id}>{image.name}</option>
+                ))}
+              </select>
             </div>
 
             {/* Model Deployment */}
@@ -303,6 +294,7 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                 gpuCount={listing.gpu.count}
                 vramPerGPU={listing.gpu.vramGB}
                 pricePerHour={listing.pricePerHour}
+                onConfigChange={setDeployConfig}
                 compact
               />
             </div>
