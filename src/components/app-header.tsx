@@ -43,11 +43,13 @@ export function AppHeader() {
   const demandNav = [
     { href: '/app/demand', label: 'Browse' },
     { href: '/app/demand/rentals', label: 'Rentals' },
+    { href: '/app/demand/billing', label: 'Billing' },
   ];
 
   const supplyNav = [
     { href: '/app/supply', label: 'Dashboard' },
     { href: '/app/supply/listings', label: 'Listings' },
+    { href: '/app/supply/billing', label: 'Earnings' },
     { href: '/app/supply/onboard', label: 'Add Hardware' },
   ];
 
