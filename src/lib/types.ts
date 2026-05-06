@@ -4,7 +4,77 @@ export type Interconnect = 'pcie' | 'nvlink-bridge' | 'nvswitch' | 'nvswitch-nvl
 
 export type Region = 'na-east' | 'na-west' | 'eu' | 'apac' | 'in';
 
-export type TrustTier = 'verified+' | 'verified' | 'new';
+export type TrustTier = 'platinum' | 'gold' | 'silver' | 'bronze';
+
+/**
+ * Supplier Tier System
+ * 
+ * Tiers are assigned based on:
+ * - Uptime SLA (measured over rolling 30 days)
+ * - Completed rentals (track record)
+ * - Hardware verification status
+ * - Response time to issues
+ * - ECC error rate
+ * 
+ * Pricing is influenced by tier — higher tiers command a premium
+ * because they offer better reliability guarantees.
+ */
+export const SUPPLIER_TIERS: Record<TrustTier, {
+  label: string;
+  description: string;
+  color: string;
+  bgColor: string;
+  borderColor: string;
+  uptimeSLA: string;
+  minCompletedRentals: number;
+  pricingMultiplier: number; // 1.0 = base, higher = premium
+  features: string[];
+}> = {
+  platinum: {
+    label: 'Platinum',
+    description: 'Enterprise-grade reliability with 99.99% uptime SLA',
+    color: 'text-[#E5E4E2]',
+    bgColor: 'bg-[#E5E4E2]/10',
+    borderColor: 'border-[#E5E4E2]/30',
+    uptimeSLA: '99.99%',
+    minCompletedRentals: 500,
+    pricingMultiplier: 1.25,
+    features: ['99.99% uptime SLA', 'Priority support (<2min)', 'Auto-failover', 'Dedicated monitoring', 'Hardware redundancy'],
+  },
+  gold: {
+    label: 'Gold',
+    description: 'High reliability with 99.95% uptime SLA',
+    color: 'text-[#FFD700]',
+    bgColor: 'bg-[#FFD700]/10',
+    borderColor: 'border-[#FFD700]/30',
+    uptimeSLA: '99.95%',
+    minCompletedRentals: 200,
+    pricingMultiplier: 1.12,
+    features: ['99.95% uptime SLA', 'Fast support (<5min)', 'Health monitoring', 'Verified benchmarks'],
+  },
+  silver: {
+    label: 'Silver',
+    description: 'Reliable with 99.9% uptime SLA',
+    color: 'text-[#C0C0C0]',
+    bgColor: 'bg-[#C0C0C0]/10',
+    borderColor: 'border-[#C0C0C0]/30',
+    uptimeSLA: '99.9%',
+    minCompletedRentals: 50,
+    pricingMultiplier: 1.0,
+    features: ['99.9% uptime SLA', 'Standard support (<15min)', 'Basic monitoring'],
+  },
+  bronze: {
+    label: 'Bronze',
+    description: 'Entry-level providers, best-effort availability',
+    color: 'text-[#CD7F32]',
+    bgColor: 'bg-[#CD7F32]/10',
+    borderColor: 'border-[#CD7F32]/30',
+    uptimeSLA: '99.5%',
+    minCompletedRentals: 0,
+    pricingMultiplier: 0.85,
+    features: ['99.5% uptime SLA', 'Community support', 'Basic verification'],
+  },
+};
 
 export type ListingStatus = 'live' | 'paused' | 'rented' | 'maintenance';
 
@@ -33,12 +103,14 @@ export interface Benchmarks {
 }
 
 export interface Supplier {
-  handle: string;
+  id: string; // anonymous ID, not shown to users
   tier: TrustTier;
   completedRentals: number;
   uptime: number;
   memberSince: string;
   responseTime: string;
+  eccErrorRate: number; // errors per million hours
+  lastVerified: string;
 }
 
 export interface Image {

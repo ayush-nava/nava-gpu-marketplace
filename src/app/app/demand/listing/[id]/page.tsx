@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { listings } from '@/lib/mock';
 import { LiveDot } from '@/components/ui/live-dot';
 import { MonoStat } from '@/components/ui/mono-stat';
+import { SupplierTierBadge } from '@/components/supplier-tier-badge';
 import { SpecTable } from '@/components/ui/spec-table';
 import { TopologyDiagram } from '@/components/topology-diagram';
 import { AvailabilityStrip } from '@/components/availability-strip';
@@ -115,11 +116,11 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
               )}
             </div>
             <div className="flex items-center gap-4 text-sm text-tertiary">
+              <SupplierTierBadge tier={listing.supplier.tier} showSLA />
+              <span>·</span>
               <span className="font-mono uppercase">{listing.region}</span>
               <span>·</span>
-              <span>{listing.supplier.completedRentals} completed rentals</span>
-              <span>·</span>
-              <span>{listing.supplier.uptime.toFixed(2)}% uptime</span>
+              <span>{listing.supplier.completedRentals} rentals</span>
             </div>
           </div>
 
@@ -214,17 +215,17 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                 <div className="bg-surface border border-border-subtle rounded-card p-6 space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-elevated rounded-full flex items-center justify-center">
-                      <span className="font-mono text-sm text-secondary">{listing.supplier.handle.slice(-3)}</span>
+                      <span className="font-mono text-sm text-secondary">{listing.supplier.tier.charAt(0).toUpperCase()}</span>
                     </div>
                     <div>
-                      <div className="font-mono text-primary">{listing.supplier.handle}</div>
+                      <SupplierTierBadge tier={listing.supplier.tier} showSLA size="md" />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border-subtle">
                     <MonoStat label="Completed Rentals" value={listing.supplier.completedRentals} />
-                    <MonoStat label="Avg Uptime" value={`${listing.supplier.uptime.toFixed(2)}%`} />
-                    <MonoStat label="Member Since" value={listing.supplier.memberSince} />
+                    <MonoStat label="Uptime" value={`${listing.supplier.uptime.toFixed(3)}%`} />
                     <MonoStat label="Response Time" value={listing.supplier.responseTime} />
+                    <MonoStat label="ECC Errors" value={listing.supplier.eccErrorRate === 0 ? 'None' : `${listing.supplier.eccErrorRate}/Mhr`} />
                   </div>
                 </div>
               )}

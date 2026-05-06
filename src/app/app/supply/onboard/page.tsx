@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Check, Upload, Loader2 } from 'lucide-react';
+import { TierPricingChart } from '@/components/tier-pricing-chart';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import type { GPUModel, Interconnect } from '@/lib/types';
@@ -641,6 +642,9 @@ export default function OnboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Tier Pricing Dynamics */}
+      <TierPricingChart basePrice={effectiveRate} />
     </div>
   );
 

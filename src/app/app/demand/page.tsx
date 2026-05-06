@@ -9,6 +9,7 @@ import { listings } from '@/lib/mock';
 import { AI_MODELS } from '@/lib/mock/models';
 import { FilterState, Listing, GPUModel, Interconnect, Region } from '@/lib/types';
 import { LiveDot } from '@/components/ui/live-dot';
+import { SupplierTierBadge } from '@/components/supplier-tier-badge';
 import { TopologyDiagram } from '@/components/topology-diagram';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
@@ -102,10 +103,11 @@ function ListingCard({ listing, onPin, isPinned }: { listing: Listing; onPin: ()
         </div>
 
         {/* Footer */}
-        <div className="pt-2 border-t border-border-subtle">
+        <div className="flex items-center justify-between pt-2 border-t border-border-subtle">
           <span className="font-mono text-base text-primary font-medium">
             ${listing.pricePerHour.toFixed(2)}<span className="text-tertiary text-sm">/hr</span>
           </span>
+          <SupplierTierBadge tier={listing.supplier.tier} />
         </div>
       </div>
     </Link>
@@ -190,8 +192,8 @@ export default function DemandCataloguePage() {
     } else if (sortBy === 'available') {
       result.sort((a, b) => new Date(a.availability.nextAvailable).getTime() - new Date(b.availability.nextAvailable).getTime());
     } else if (sortBy === 'trust') {
-      const tierOrder = { 'verified+': 0, 'verified': 1, 'new': 2 };
-      result.sort((a, b) => tierOrder[a.supplier.tier] - tierOrder[b.supplier.tier]);
+      const tierOrder: Record<string, number> = { 'platinum': 0, 'gold': 1, 'silver': 2, 'bronze': 3 };
+      result.sort((a, b) => (tierOrder[a.supplier.tier] ?? 9) - (tierOrder[b.supplier.tier] ?? 9));
     }
 
     return result;

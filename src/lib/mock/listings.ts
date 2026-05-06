@@ -22,16 +22,6 @@ const defaultImages = [
   { id: 'triton-24.08', name: 'Triton Inference Server 24.08', size: '19.7 GB' },
 ];
 
-const handles = [
-  'operator-7K2','operator-Q9F','operator-3XB','operator-M4P','operator-R8N',
-  'operator-J5T','operator-W2L','operator-H6V','operator-D9C','operator-F3G',
-  'operator-B7Y','operator-N4K','operator-S8M','operator-A2E','operator-P6Z',
-  'operator-U5R','operator-X3H','operator-L9W','operator-T7J','operator-C4Q',
-  'operator-G8D','operator-V2F','operator-K6B','operator-E9N','operator-Y3S',
-  'operator-Z5A','operator-I7U','operator-O4X','operator-Q2M','operator-W8P',
-  'operator-H3T','operator-R6L','operator-J9V','operator-D4C','operator-F7G',
-];
-
 const memberDates = [
   '2024-03-15','2024-06-22','2024-01-08','2024-09-11','2024-04-30',
   '2024-07-19','2024-02-14','2024-10-05','2024-05-28','2024-08-03',
@@ -43,7 +33,6 @@ const memberDates = [
 ];
 
 const regions: Region[] = ['na-east','na-west','eu','apac','in'];
-const tiers: TrustTier[] = ['verified+','verified','new'];
 
 /*
  * Realistic per-GPU specs used for benchmark generation.
@@ -193,10 +182,11 @@ function generateListing(index: number, template: ListingTemplate): Listing {
   const pricePerHour = Math.round(spec.basePrice * template.count * priceVariance * 100) / 100;
 
   const region = regions[index % regions.length];
-  const tier = tiers[Math.floor(index / 12) % tiers.length];
+  const tierOptions: TrustTier[] = ['platinum', 'gold', 'silver', 'bronze'];
+  const tier = tierOptions[index % tierOptions.length];
 
-  const completedRentals = Math.floor(rng() * 500) + (tier === 'verified+' ? 200 : tier === 'verified' ? 50 : 0);
-  const uptime = tier === 'verified+' ? 99.9 + rng() * 0.09 : tier === 'verified' ? 99.5 + rng() * 0.4 : 98 + rng() * 1.5;
+  const completedRentals = Math.floor(rng() * 500) + (tier === 'platinum' ? 500 : tier === 'gold' ? 200 : tier === 'silver' ? 50 : 5);
+  const uptime = tier === 'platinum' ? 99.99 + rng() * 0.009 : tier === 'gold' ? 99.95 + rng() * 0.04 : tier === 'silver' ? 99.9 + rng() * 0.05 : 99.5 + rng() * 0.4;
 
   return {
     id: `lst-${String(index + 1).padStart(4, '0')}`,
@@ -216,12 +206,14 @@ function generateListing(index: number, template: ListingTemplate): Listing {
     availability: generateAvailability(index),
     benchmarks: generateBenchmarks(template.gpu, template.count, template.interconnect),
     supplier: {
-      handle: handles[index % handles.length],
+      id: `sup-${String(index + 1).padStart(4, '0')}`,
       tier,
       completedRentals,
-      uptime: Math.round(uptime * 100) / 100,
+      uptime: Math.round(uptime * 1000) / 1000,
       memberSince: memberDates[index % memberDates.length],
-      responseTime: `${Math.floor(rng() * 10) + 1}m`,
+      responseTime: tier === 'platinum' ? '1m' : tier === 'gold' ? `${Math.floor(rng() * 3) + 2}m` : `${Math.floor(rng() * 10) + 5}m`,
+      eccErrorRate: tier === 'platinum' ? 0 : tier === 'gold' ? Math.floor(rng() * 2) : Math.floor(rng() * 5),
+      lastVerified: '2026-04-28T10:30:00.000Z',
     },
     images: defaultImages,
     status: index % 11 === 10 ? 'rented' : 'live',
@@ -232,5 +224,5 @@ function generateListing(index: number, template: ListingTemplate): Listing {
 export const listings: Listing[] = templates.map((t, i) => generateListing(i, t));
 
 export const featuredListings = listings.filter(l =>
-  l.supplier.tier === 'verified+' && l.status === 'live'
+  (l.supplier.tier === 'platinum' || l.supplier.tier === 'gold') && l.status === 'live'
 ).slice(0, 8);

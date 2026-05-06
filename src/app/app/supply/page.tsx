@@ -20,7 +20,7 @@ import {
 import { cn } from '@/lib/utils';
 import { listings, activeRentals } from '@/lib/mock';
 import { LiveDot } from '@/components/ui/live-dot';
-import { TrustBadge } from '@/components/ui/trust-badge';
+import { SupplierTierBadge } from '@/components/supplier-tier-badge';
 import { ListingStatus } from '@/lib/types';
 
 /* ─── Supplier-scoped mock data ─── */
@@ -41,7 +41,7 @@ const myListings = listings.slice(0, 5).map((l, i) => ({
 const myActiveRentals = activeRentals.slice(0, 3).map((r, i) => ({
   ...r,
   renterHandle: ['anon-7K2', 'anon-Q9F', 'anon-3XB'][i],
-  renterTier: (['verified+', 'verified', 'new'] as const)[i],
+  renterTier: (['gold', 'silver', 'bronze'] as const)[i],
   gpuUtil: [87, 64, 92][i],
 }));
 
@@ -202,7 +202,7 @@ export default function SupplyDashboardPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-sm text-[#FAFAFA]">{rental.renterHandle}</span>
-                    <TrustBadge tier={rental.renterTier} showLabel={false} />
+                    <SupplierTierBadge tier={rental.renterTier as 'platinum' | 'gold' | 'silver' | 'bronze'} />
                   </div>
                   <Link
                     href={`/app/demand/rentals/${rental.id}`}
