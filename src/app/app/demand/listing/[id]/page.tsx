@@ -296,7 +296,6 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                 vramPerGPU={listing.gpu.vramGB}
                 pricePerHour={listing.pricePerHour}
                 onConfigChange={setDeployConfig}
-                compact
               />
             </div>
 
