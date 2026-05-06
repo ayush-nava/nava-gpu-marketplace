@@ -7,7 +7,7 @@ import { Grid3X3, List, X, Pin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { listings } from '@/lib/mock';
 import { AI_MODELS } from '@/lib/mock/models';
-import { FilterState, Listing, GPUModel, Interconnect, Region } from '@/lib/types';
+import { FilterState, Listing, GPUModel, Interconnect, Region, TrustTier } from '@/lib/types';
 import { LiveDot } from '@/components/ui/live-dot';
 import { SupplierTierBadge } from '@/components/supplier-tier-badge';
 import { TopologyDiagram } from '@/components/topology-diagram';
@@ -148,6 +148,7 @@ export default function DemandCataloguePage() {
   const [sortBy, setSortBy] = useState<'price' | 'available' | 'trust'>('price');
   const [pinnedIds, setPinnedIds] = useState<string[]>([]);
   const [deployModelFilter, setDeployModelFilter] = useState<string>('');
+  const [tierFilter, setTierFilter] = useState<TrustTier[]>([]);
   const [filters, setFilters] = useState<FilterState>({
     gpuModels: [],
     gpuCounts: [],
@@ -176,6 +177,11 @@ export default function DemandCataloguePage() {
     }
     result = result.filter(l => l.pricePerHour <= filters.maxPricePerHour);
 
+    // Filter by supplier tier
+    if (tierFilter.length > 0) {
+      result = result.filter(l => tierFilter.includes(l.supplier.tier));
+    }
+
     // Filter by model deployment compatibility
     if (deployModelFilter) {
       const model = AI_MODELS.find(m => m.id === deployModelFilter);
@@ -197,7 +203,7 @@ export default function DemandCataloguePage() {
     }
 
     return result;
-  }, [filters, sortBy, deployModelFilter]);
+  }, [filters, sortBy, deployModelFilter, tierFilter]);
 
   const toggleFilter = <K extends keyof FilterState>(
     key: K,
@@ -299,6 +305,29 @@ export default function DemandCataloguePage() {
                 />
                 <span className="text-sm text-secondary">{opt.label}</span>
               </label>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h3 className="text-xs font-medium text-tertiary uppercase tracking-wide mb-3">Supplier Tier</h3>
+          <div className="flex flex-wrap gap-1.5">
+            {(['platinum', 'gold', 'silver', 'bronze'] as TrustTier[]).map(tier => (
+              <button
+                key={tier}
+                onClick={() => setTierFilter(prev => prev.includes(tier) ? prev.filter(t => t !== tier) : [...prev, tier])}
+                className={cn(
+                  'px-2.5 py-1 text-xs rounded-[6px] border transition-colors capitalize',
+                  tierFilter.includes(tier)
+                    ? tier === 'platinum' ? 'bg-[#E5E4E2]/20 text-[#E5E4E2] border-[#E5E4E2]/40'
+                    : tier === 'gold' ? 'bg-[#FFD700]/20 text-[#FFD700] border-[#FFD700]/40'
+                    : tier === 'silver' ? 'bg-[#C0C0C0]/20 text-[#C0C0C0] border-[#C0C0C0]/40'
+                    : 'bg-[#CD7F32]/20 text-[#CD7F32] border-[#CD7F32]/40'
+                    : 'bg-elevated text-secondary hover:bg-hover border-transparent'
+                )}
+              >
+                {tier}
+              </button>
             ))}
           </div>
         </div>

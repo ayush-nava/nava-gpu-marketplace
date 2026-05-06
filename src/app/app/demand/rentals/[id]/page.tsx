@@ -220,6 +220,17 @@ export default function ActiveSessionPage({ params }: { params: { id: string } }
 
         {/* Sidebar */}
         <div className="space-y-4">
+          {/* Model Deployment — primary action */}
+          <div className="space-y-2">
+            <h3 className="text-xs text-tertiary uppercase tracking-wide">Model Deployment</h3>
+            <ModelDeployCard
+              gpuModel={listing.gpu.model}
+              gpuCount={listing.gpu.count}
+              vramPerGPU={listing.gpu.vramGB}
+              pricePerHour={listing.pricePerHour}
+            />
+          </div>
+
           {/* Topology */}
           <div className="bg-surface border border-border-subtle rounded-card p-4">
             <h3 className="text-xs text-tertiary uppercase tracking-wide mb-3">Topology</h3>
@@ -278,17 +289,6 @@ export default function ActiveSessionPage({ params }: { params: { id: string } }
                 </span>
               </div>
             </div>
-          </div>
-
-          {/* Model Deployment */}
-          <div className="space-y-2">
-            <h3 className="text-xs text-tertiary uppercase tracking-wide">Model Deployment</h3>
-            <ModelDeployCard
-              gpuModel={listing.gpu.model}
-              gpuCount={listing.gpu.count}
-              vramPerGPU={listing.gpu.vramGB}
-              pricePerHour={listing.pricePerHour}
-            />
           </div>
         </div>
       </div>

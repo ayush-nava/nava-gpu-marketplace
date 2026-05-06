@@ -475,6 +475,60 @@ export default function OnboardPage() {
           </div>
         </motion.div>
       )}
+
+      {/* Tier Education */}
+      {diagComplete && (
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+          className="rounded-[10px] border border-[#1F1F23] bg-[#111113] p-5 space-y-4">
+          <h3 className="text-sm font-semibold text-[#FAFAFA]">Your Supplier Tier</h3>
+          <div className="flex items-center gap-3">
+            <span className="px-3 py-1.5 rounded-[6px] border border-[#CD7F32]/40 bg-[#CD7F32]/10 text-[#CD7F32] text-sm font-semibold">Bronze</span>
+            <span className="text-sm text-[#A1A1AA]">Starting tier for new providers</span>
+          </div>
+          <p className="text-xs text-[#A1A1AA] leading-relaxed">
+            All new providers start at Bronze tier. Your tier determines your pricing multiplier and visibility on the marketplace.
+            Higher tiers earn significantly more per hour for the same hardware.
+          </p>
+          <div className="space-y-2 pt-3 border-t border-[#1F1F23]">
+            <p className="text-[10px] uppercase tracking-wide text-[#A1A1AA] font-medium">How to upgrade</p>
+            <div className="space-y-1.5">
+              <div className="flex items-start gap-2">
+                <span className="text-[#C0C0C0] text-xs font-mono w-14 shrink-0">Silver</span>
+                <span className="text-xs text-[#A1A1AA]">50+ completed rentals, 99.9% uptime over 30 days, response time under 15 min</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-[#FFD700] text-xs font-mono w-14 shrink-0">Gold</span>
+                <span className="text-xs text-[#A1A1AA]">200+ rentals, 99.95% uptime, response time under 5 min, zero ECC errors</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-[#E5E4E2] text-xs font-mono w-14 shrink-0">Platinum</span>
+                <span className="text-xs text-[#A1A1AA]">500+ rentals, 99.99% uptime, response time under 2 min, hardware redundancy</span>
+              </div>
+            </div>
+          </div>
+          <div className="space-y-1.5 pt-3 border-t border-[#1F1F23]">
+            <p className="text-[10px] uppercase tracking-wide text-[#A1A1AA] font-medium">Pricing impact</p>
+            <div className="grid grid-cols-4 gap-2">
+              <div className="text-center">
+                <span className="text-[10px] text-[#CD7F32]">Bronze</span>
+                <p className="font-mono text-xs text-[#FAFAFA]">-15%</p>
+              </div>
+              <div className="text-center">
+                <span className="text-[10px] text-[#C0C0C0]">Silver</span>
+                <p className="font-mono text-xs text-[#FAFAFA]">Base</p>
+              </div>
+              <div className="text-center">
+                <span className="text-[10px] text-[#FFD700]">Gold</span>
+                <p className="font-mono text-xs text-[#FAFAFA]">+12%</p>
+              </div>
+              <div className="text-center">
+                <span className="text-[10px] text-[#E5E4E2]">Platinum</span>
+                <p className="font-mono text-xs text-[#FAFAFA]">+25%</p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 
