@@ -24,6 +24,7 @@ import {
 const STEPS = [
   'Provider Profile',
   'Hardware',
+  'Install Agent',
   'Diagnostics',
   'Availability',
   'Pricing',
@@ -94,14 +95,19 @@ export default function OnboardPage() {
   const [nvmeTb, setNvmeTb] = useState('30.72');
   const [netGbps, setNetGbps] = useState('100');
 
-  // Step 2 – Diagnostics
+  // Step 2 – Install Agent
+  const [agentInstalling, setAgentInstalling] = useState(false);
+  const [agentInstalled, setAgentInstalled] = useState(false);
+  const [agentToken] = useState('nva_tk_7f3a9b2c1d4e5f6a8b9c0d1e2f3a4b5c');
+
+  // Step 3 – Diagnostics
   const [diagRunning, setDiagRunning] = useState(false);
   const [diagStage, setDiagStage] = useState(-1);
   const [diagLines, setDiagLines] = useState<string[]>([]);
   const [diagComplete, setDiagComplete] = useState(false);
   const termRef = useRef<HTMLDivElement>(null);
 
-  // Step 3 – Availability
+  // Step 4 – Availability
   const [scheduleMode, setScheduleMode] = useState<'always' | 'windowed' | 'specific'>('always');
   const [minDuration, setMinDuration] = useState('1h');
   const [weeklyGrid, setWeeklyGrid] = useState<boolean[][]>(
@@ -125,13 +131,14 @@ export default function OnboardPage() {
     switch (step) {
       case 0: return displayName.trim().length > 0 && location.trim().length > 0;
       case 1: return true;
-      case 2: return diagComplete;
-      case 3: return true;
-      case 4: return pricingMode === 'auto' || parseFloat(hourlyRate) > 0;
-      case 5: return true;
+      case 2: return agentInstalled;
+      case 3: return diagComplete;
+      case 4: return true;
+      case 5: return pricingMode === 'auto' || parseFloat(hourlyRate) > 0;
+      case 6: return true;
       default: return true;
     }
-  }, [step, displayName, location, diagComplete, pricingMode, hourlyRate]);
+  }, [step, displayName, location, agentInstalled, diagComplete, pricingMode, hourlyRate]);
 
   const goNext = () => {
     if (step < STEPS.length - 1 && canContinue()) {
@@ -408,7 +415,129 @@ export default function OnboardPage() {
 
 
   /* ═══════════════════════════════════════════════════════════════
-     Step 2 – Diagnostics
+     Step 2 – Install Agent
+     ═══════════════════════════════════════════════════════════════ */
+  const handleAgentInstall = () => {
+    setAgentInstalling(true);
+    setTimeout(() => {
+      setAgentInstalling(false);
+      setAgentInstalled(true);
+    }, 2500);
+  };
+
+  const renderInstallAgent = () => (
+    <div className="space-y-6 max-w-2xl">
+      <div>
+        <h2 className="text-lg font-semibold text-[#FAFAFA] mb-1">Install Nava Agent</h2>
+        <p className="text-sm text-[#A1A1AA]">
+          Install the Nava agent on your hardware. It handles diagnostics, capacity management, image provisioning, and health monitoring.
+        </p>
+      </div>
+
+      {/* What the agent does */}
+      <div className="rounded-[10px] border border-[#1F1F23] bg-[#18181B] p-4 space-y-3">
+        <h3 className="text-xs font-medium text-[#A1A1AA] uppercase tracking-wide">The agent handles</h3>
+        <div className="grid grid-cols-2 gap-3">
+          {[
+            { title: 'Hardware diagnostics', desc: 'GPU detection, NCCL benchmarks, NVLink tests' },
+            { title: 'Capacity management', desc: 'Tracks availability, manages rental scheduling' },
+            { title: 'Image provisioning', desc: 'Flashes OS images, injects SSH keys for renters' },
+            { title: 'Health monitoring', desc: 'GPU temps, ECC errors, heartbeat reporting' },
+          ].map(item => (
+            <div key={item.title} className="space-y-0.5">
+              <p className="text-sm text-[#FAFAFA]">{item.title}</p>
+              <p className="text-xs text-[#A1A1AA]">{item.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Installation command */}
+      <div className="space-y-2">
+        <h3 className="text-xs font-medium text-[#A1A1AA] uppercase tracking-wide">1. Run on your node</h3>
+        <div className="rounded-[6px] border border-[#1F1F23] bg-[#0A0A0C] p-4 overflow-x-auto">
+          <pre className="font-mono text-xs text-[#A1A1AA] leading-relaxed">
+{`curl -fsSL https://get.nava.dev/agent | bash -s -- \\
+  --token ${agentToken} \\
+  --node-id $(hostname)`}
+          </pre>
+        </div>
+      </div>
+
+      {/* Token */}
+      <div className="space-y-2">
+        <h3 className="text-xs font-medium text-[#A1A1AA] uppercase tracking-wide">2. Your agent token</h3>
+        <div className="flex items-center gap-2">
+          <div className="flex-1 rounded-[6px] border border-[#3F3F46] bg-[#18181B] px-3 py-2">
+            <span className="font-mono text-xs text-[#FAFAFA]">{agentToken}</span>
+          </div>
+          <button className="px-3 py-2 bg-[#27272A] hover:bg-[#3F3F46] text-[#FAFAFA] text-xs font-medium rounded-[6px] transition-colors">
+            Copy
+          </button>
+        </div>
+        <p className="text-[10px] text-[#A1A1AA]">This token authenticates your node with the Nava platform. Keep it secret.</p>
+      </div>
+
+      {/* Requirements */}
+      <div className="rounded-[10px] border border-[#1F1F23] bg-[#18181B] p-4 space-y-2">
+        <h3 className="text-xs font-medium text-[#A1A1AA] uppercase tracking-wide">Requirements</h3>
+        <div className="space-y-1.5 text-xs text-[#A1A1AA]">
+          <div className="flex items-center gap-2">
+            <span className="w-1 h-1 rounded-full bg-[#A1A1AA]" />
+            <span>Linux (Ubuntu 20.04+, RHEL 8+, or Debian 11+)</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-1 h-1 rounded-full bg-[#A1A1AA]" />
+            <span>NVIDIA driver 525+ with nvidia-smi accessible</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-1 h-1 rounded-full bg-[#A1A1AA]" />
+            <span>Root or sudo access for image provisioning</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-1 h-1 rounded-full bg-[#A1A1AA]" />
+            <span>Outbound HTTPS (port 443) to api.nava.dev</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-1 h-1 rounded-full bg-[#A1A1AA]" />
+            <span>SSH server running on a public IP or DDNS hostname</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Verify connection */}
+      <div className="space-y-3">
+        <h3 className="text-xs font-medium text-[#A1A1AA] uppercase tracking-wide">3. Verify connection</h3>
+        {!agentInstalled && !agentInstalling && (
+          <button
+            onClick={handleAgentInstall}
+            className="px-4 py-2.5 bg-[#84CC16] text-[#0A0A0B] text-sm font-medium rounded-[6px] hover:bg-[#84CC16]/90 transition-colors"
+          >
+            Check agent connection
+          </button>
+        )}
+        {agentInstalling && (
+          <div className="flex items-center gap-3 px-4 py-3 rounded-[6px] border border-[#27272A] bg-[#18181B]">
+            <Loader2 className="w-4 h-4 text-[#84CC16] animate-spin" />
+            <span className="text-sm text-[#A1A1AA]">Waiting for agent heartbeat...</span>
+          </div>
+        )}
+        {agentInstalled && (
+          <div className="flex items-center gap-3 px-4 py-3 rounded-[6px] border border-[#84CC16]/30 bg-[#84CC16]/5">
+            <Check className="w-4 h-4 text-[#84CC16]" />
+            <div>
+              <span className="text-sm text-[#84CC16] font-medium">Agent connected</span>
+              <p className="text-xs text-[#A1A1AA] mt-0.5">Version 1.4.2 · Last heartbeat: just now · GPUs detected: {gpuCount}</p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+
+  /* ═══════════════════════════════════════════════════════════════
+     Step 3 – Diagnostics
      ═══════════════════════════════════════════════════════════════ */
   const renderDiagnostics = () => (
     <div className="space-y-6 max-w-2xl">
@@ -858,6 +987,7 @@ export default function OnboardPage() {
   const stepRenderers = [
     renderProviderProfile,
     renderHardware,
+    renderInstallAgent,
     renderDiagnostics,
     renderAvailability,
     renderPricing,
