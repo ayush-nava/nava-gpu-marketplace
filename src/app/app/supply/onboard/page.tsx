@@ -89,6 +89,7 @@ export default function OnboardPage() {
   const [gpuModel, setGpuModel] = useState<GPUModel>('H100 SXM5');
   const [gpuCount, setGpuCount] = useState<number>(8);
   const [interconnect, setInterconnect] = useState<Interconnect>('nvswitch');
+  const [allowSlicing, setAllowSlicing] = useState(true);
   const [cpuModel, setCpuModel] = useState('AMD EPYC 9654');
   const [vcpus, setVcpus] = useState('192');
   const [ramGb, setRamGb] = useState('2048');
@@ -409,6 +410,57 @@ export default function OnboardPage() {
             </div>
           </div>
         </div>
+
+        {/* Slicing Toggle */}
+        {gpuCount >= 4 && (interconnect === 'nvswitch' || interconnect === 'nvswitch-nvlink5') && (
+          <div className="rounded-[10px] border border-[#1F1F23] bg-[#111113] p-4 w-full max-w-sm space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-medium text-[#FAFAFA]">Allow Sliced Access</h3>
+                <p className="text-[11px] text-[#A1A1AA] mt-0.5">Let Nava sell subsets of your GPUs</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAllowSlicing(!allowSlicing)}
+                className={cn(
+                  'relative h-5 w-9 rounded-full border transition-colors',
+                  allowSlicing ? 'bg-[#84CC16] border-[#84CC16]' : 'bg-[#18181B] border-[#27272A]'
+                )}
+              >
+                <span className={cn(
+                  'absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white transition-transform',
+                  allowSlicing && 'translate-x-4'
+                )} />
+              </button>
+            </div>
+            {allowSlicing && (
+              <div className="pt-3 border-t border-[#1F1F23] space-y-2">
+                <p className="text-[10px] text-[#A1A1AA] leading-relaxed">
+                  Your {gpuCount}x {gpuModel} node will be available as:
+                </p>
+                <div className="space-y-1 text-xs">
+                  <div className="flex items-center justify-between px-2 py-1.5 rounded bg-[#18181B]">
+                    <span className="text-[#FAFAFA]">{gpuCount}x {gpuModel}</span>
+                    <span className="text-[#84CC16] font-mono">Bare Metal</span>
+                  </div>
+                  {[1, 2, 4].filter(c => c < gpuCount).map(c => (
+                    <div key={c} className="flex items-center justify-between px-2 py-1.5 rounded bg-[#18181B]">
+                      <span className="text-[#FAFAFA]">{c}x {gpuModel}</span>
+                      <span className="text-[#3B82F6] font-mono">vGPU</span>
+                    </div>
+                  ))}
+                  <div className="flex items-center justify-between px-2 py-1.5 rounded bg-[#18181B]">
+                    <span className="text-[#FAFAFA]">{Math.floor(VRAM_MAP[gpuModel] / 2)}GB slice</span>
+                    <span className="text-[#A855F7] font-mono">GPU Slice</span>
+                  </div>
+                </div>
+                <p className="text-[10px] text-[#A1A1AA]">
+                  You earn the same hourly rate. Nava handles VM orchestration and adds a small fee to sliced SKUs.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

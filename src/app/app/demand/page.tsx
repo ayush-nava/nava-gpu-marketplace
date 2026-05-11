@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Grid3X3, List, X, Pin } from 'lucide-react';
+import { Grid3X3, List, X, Pin, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { listings } from '@/lib/mock';
 import { AI_MODELS } from '@/lib/mock/models';
@@ -21,6 +21,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+type ExtendedListing = Listing & { accessType: 'bare-metal' | 'vgpu' | 'slice'; parentListingId?: string };
+
 const gpuModelOptions: GPUModel[] = ['H100 SXM5', 'H100 PCIe', 'A100 SXM', 'A100 PCIe', 'B200', 'L40S', 'RTX 4090', 'RTX 6000 Ada'];
 const gpuCountOptions = [1, 2, 4, 8];
 const interconnectOptions: { value: Interconnect; label: string }[] = [
@@ -37,7 +39,23 @@ const regionOptions: { value: Region; label: string }[] = [
   { value: 'in', label: 'India' },
 ];
 
-function ListingCard({ listing, onPin, isPinned }: { listing: Listing; onPin: () => void; isPinned: boolean }) {
+function AccessTypeBadge({ accessType }: { accessType: 'bare-metal' | 'vgpu' | 'slice' }) {
+  if (accessType === 'bare-metal') return null;
+  if (accessType === 'vgpu') {
+    return (
+      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#3B82F6]/15 text-[#3B82F6] border border-[#3B82F6]/30">
+        vGPU
+      </span>
+    );
+  }
+  return (
+    <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#A855F7]/15 text-[#A855F7] border border-[#A855F7]/30">
+      Slice
+    </span>
+  );
+}
+
+function ListingCard({ listing, onPin, isPinned }: { listing: ExtendedListing; onPin: () => void; isPinned: boolean }) {
   const isAvailableNow = new Date(listing.availability.nextAvailable) <= new Date();
 
   return (
@@ -59,11 +77,14 @@ function ListingCard({ listing, onPin, isPinned }: { listing: Listing; onPin: ()
         {/* Header */}
         <div className="flex items-start justify-between gap-2">
           <div className="space-y-1">
-            <div className="font-mono text-sm text-primary font-medium">
-              {listing.gpu.count}x {listing.gpu.model}
-              {listing.interconnect !== 'pcie' && (
-                <span className="text-tertiary"> · {listing.interconnectLabel}</span>
-              )}
+            <div className="flex items-center gap-2">
+              <div className="font-mono text-sm text-primary font-medium">
+                {listing.gpu.count}x {listing.gpu.model}
+                {listing.interconnect !== 'pcie' && (
+                  <span className="text-tertiary"> · {listing.interconnectLabel}</span>
+                )}
+              </div>
+              <AccessTypeBadge accessType={listing.accessType} />
             </div>
           </div>
         </div>
@@ -114,7 +135,7 @@ function ListingCard({ listing, onPin, isPinned }: { listing: Listing; onPin: ()
   );
 }
 
-function ListingTableRow({ listing }: { listing: Listing }) {
+function ListingTableRow({ listing }: { listing: ExtendedListing }) {
   const isAvailableNow = new Date(listing.availability.nextAvailable) <= new Date();
 
   return (
@@ -127,6 +148,7 @@ function ListingTableRow({ listing }: { listing: Listing }) {
           {listing.gpu.count}x {listing.gpu.model}
         </span>
         <span className="text-xs text-tertiary">{listing.interconnectLabel}</span>
+        <AccessTypeBadge accessType={listing.accessType} />
       </div>
       <div className="font-mono text-sm text-secondary">{listing.host.cpu.split(' ').slice(-1)}</div>
       <div className="font-mono text-sm text-secondary">{listing.host.ramGB} GB</div>
@@ -149,6 +171,8 @@ export default function DemandCataloguePage() {
   const [pinnedIds, setPinnedIds] = useState<string[]>([]);
   const [deployModelFilter, setDeployModelFilter] = useState<string>('');
   const [tierFilter, setTierFilter] = useState<TrustTier[]>([]);
+  const [accessType, setAccessType] = useState<'bare-metal' | 'vgpu' | 'slice'>('bare-metal');
+  const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<FilterState>({
     gpuModels: [],
     gpuCounts: [],
@@ -160,9 +184,89 @@ export default function DemandCataloguePage() {
     trustTiers: [],
   });
 
-  const filteredListings = useMemo(() => {
-    let result = listings.filter(l => l.status === 'live');
+  // Generate bare-metal listings with accessType tag
+  const bareMetalListings: ExtendedListing[] = useMemo(() => {
+    return listings
+      .filter(l => l.status === 'live')
+      .map(l => ({ ...l, accessType: 'bare-metal' as const }));
+  }, []);
 
+  // Generate virtual GPU listings from eligible nodes
+  const vgpuListings: ExtendedListing[] = useMemo(() => {
+    const eligible = listings.filter(
+      l => l.status === 'live' && l.gpu.count >= 4 && (l.interconnect === 'nvswitch' || l.interconnect === 'nvswitch-nvlink5')
+    );
+    const derived: ExtendedListing[] = [];
+    for (const original of eligible) {
+      const sliceCounts = [1, 2, 4].filter(c => c < original.gpu.count);
+      for (const sliceCount of sliceCounts) {
+        derived.push({
+          ...original,
+          id: `${original.id}-vgpu-${sliceCount}`,
+          gpu: { ...original.gpu, count: sliceCount },
+          pricePerHour: (original.pricePerHour / original.gpu.count) * sliceCount * 1.08,
+          accessType: 'vgpu' as const,
+          parentListingId: original.id,
+        });
+      }
+    }
+    return derived;
+  }, []);
+
+  // Generate GPU slice listings from eligible nodes
+  const sliceListings: ExtendedListing[] = useMemo(() => {
+    const eligible = listings.filter(
+      l => l.status === 'live' && l.gpu.count >= 4 && (l.interconnect === 'nvswitch' || l.interconnect === 'nvswitch-nvlink5')
+    );
+    const derived: ExtendedListing[] = [];
+    for (const original of eligible) {
+      // 2 slices per GPU in the node
+      const totalSlices = original.gpu.count * 2;
+      for (let sliceIndex = 0; sliceIndex < totalSlices; sliceIndex++) {
+        derived.push({
+          ...original,
+          id: `${original.id}-slice-${sliceIndex}`,
+          gpu: { ...original.gpu, count: 1, vramGB: Math.floor(original.gpu.vramGB / 2) },
+          pricePerHour: (original.pricePerHour / original.gpu.count) * 0.55 * 1.10,
+          accessType: 'slice' as const,
+          parentListingId: original.id,
+          interconnect: 'pcie' as Interconnect,
+          interconnectLabel: 'Virtual',
+          interconnectBandwidth: 0,
+        });
+      }
+    }
+    return derived;
+  }, []);
+
+  // All listings combined (for search across all types)
+  const allListings: ExtendedListing[] = useMemo(() => {
+    return [...bareMetalListings, ...vgpuListings, ...sliceListings];
+  }, [bareMetalListings, vgpuListings, sliceListings]);
+
+  const filteredListings = useMemo(() => {
+    // Determine base set
+    let result: ExtendedListing[];
+    if (searchQuery.trim()) {
+      // Search across ALL listing sets
+      const query = searchQuery.toLowerCase();
+      result = allListings.filter(l =>
+        l.gpu.model.toLowerCase().includes(query) ||
+        l.region.toLowerCase().includes(query) ||
+        l.interconnectLabel.toLowerCase().includes(query)
+      );
+    } else {
+      // Use access type to pick the set
+      if (accessType === 'bare-metal') {
+        result = [...bareMetalListings];
+      } else if (accessType === 'vgpu') {
+        result = [...vgpuListings];
+      } else {
+        result = [...sliceListings];
+      }
+    }
+
+    // Apply filters
     if (filters.gpuModels.length > 0) {
       result = result.filter(l => filters.gpuModels.includes(l.gpu.model));
     }
@@ -186,7 +290,6 @@ export default function DemandCataloguePage() {
     if (deployModelFilter) {
       const model = AI_MODELS.find(m => m.id === deployModelFilter);
       if (model) {
-        // Find the smallest variant of this model (INT4/AWQ) to get minimum VRAM needed
         const minVRAM = Math.min(...model.variants.map(v => v.minVRAMGB));
         result = result.filter(l => (l.gpu.count * l.gpu.vramGB) >= minVRAM);
       }
@@ -203,7 +306,7 @@ export default function DemandCataloguePage() {
     }
 
     return result;
-  }, [filters, sortBy, deployModelFilter, tierFilter]);
+  }, [filters, sortBy, deployModelFilter, tierFilter, accessType, searchQuery, bareMetalListings, vgpuListings, sliceListings, allListings]);
 
   const toggleFilter = <K extends keyof FilterState>(
     key: K,
@@ -222,7 +325,7 @@ export default function DemandCataloguePage() {
     setPinnedIds(prev => prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]);
   };
 
-  const pinnedListings = listings.filter(l => pinnedIds.includes(l.id));
+  const pinnedListings = allListings.filter(l => pinnedIds.includes(l.id));
 
   const gpuModelCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -236,6 +339,61 @@ export default function DemandCataloguePage() {
     <div className="flex min-h-[calc(100vh-56px)]">
       {/* Filter Rail */}
       <aside className="w-64 shrink-0 border-r border-border-subtle p-4 space-y-6 overflow-y-auto">
+        {/* Search Box */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#71717A]" />
+          <input
+            type="text"
+            placeholder="Search GPUs..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="bg-[#18181B] border border-[#3F3F46] text-[#FAFAFA] rounded-[6px] text-sm px-3 py-2 pl-9 w-full outline-none focus:border-[#84CC16] placeholder:text-[#71717A]"
+          />
+        </div>
+
+        {/* Access Type Segmented Control */}
+        <div>
+          <h3 className="text-xs font-medium text-tertiary uppercase tracking-wide mb-3">Access Type</h3>
+          <div className="flex flex-col gap-1.5">
+            <button
+              onClick={() => setAccessType('bare-metal')}
+              className={cn(
+                'w-full text-left px-3 py-2.5 rounded-[6px] border transition-colors',
+                accessType === 'bare-metal'
+                  ? 'bg-accent/10 border-accent text-accent'
+                  : 'bg-elevated border-border-subtle text-secondary hover:border-border-default'
+              )}
+            >
+              <div className="text-sm font-medium">Bare Metal</div>
+              <div className="text-[11px] opacity-70">Full dedicated GPU nodes</div>
+            </button>
+            <button
+              onClick={() => setAccessType('vgpu')}
+              className={cn(
+                'w-full text-left px-3 py-2.5 rounded-[6px] border transition-colors',
+                accessType === 'vgpu'
+                  ? 'bg-accent/10 border-accent text-accent'
+                  : 'bg-elevated border-border-subtle text-secondary hover:border-border-default'
+              )}
+            >
+              <div className="text-sm font-medium">Virtual GPU</div>
+              <div className="text-[11px] opacity-70">Sliced multi-GPU from larger nodes</div>
+            </button>
+            <button
+              onClick={() => setAccessType('slice')}
+              className={cn(
+                'w-full text-left px-3 py-2.5 rounded-[6px] border transition-colors',
+                accessType === 'slice'
+                  ? 'bg-accent/10 border-accent text-accent'
+                  : 'bg-elevated border-border-subtle text-secondary hover:border-border-default'
+              )}
+            >
+              <div className="text-sm font-medium">GPU Slice</div>
+              <div className="text-[11px] opacity-70">Sub-GPU fractions for small workloads</div>
+            </button>
+          </div>
+        </div>
+
         <div>
           <h3 className="text-xs font-medium text-tertiary uppercase tracking-wide mb-3">GPU Model</h3>
           <div className="space-y-2">
