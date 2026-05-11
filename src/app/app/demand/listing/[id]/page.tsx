@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Check, Clock } from 'lucide-react';
@@ -37,7 +37,44 @@ type Section = (typeof sections)[number];
 export default function ListingDetailPage({ params }: { params: { id: string } }) {
   const { id } = params;
   const router = useRouter();
-  const listing = listings.find(l => l.id === id);
+
+  // Handle derived listing IDs (vGPU and Slice)
+  // Format: lst-XXXX-vgpu-N or lst-XXXX-slice-N
+  const derivedListing = useMemo(() => {
+    if (id.includes('-vgpu-')) {
+      const parts = id.split('-vgpu-');
+      const parentId = parts[0];
+      const gpuCount = parseInt(parts[1]);
+      const parent = listings.find(l => l.id === parentId);
+      if (!parent) return null;
+      return {
+        ...parent,
+        id,
+        gpu: { ...parent.gpu, count: gpuCount },
+        pricePerHour: (parent.pricePerHour / parent.gpu.count) * gpuCount * 1.08,
+        accessType: 'vgpu' as const,
+      };
+    }
+    if (id.includes('-slice-')) {
+      const parts = id.split('-slice-');
+      const parentId = parts[0];
+      const parent = listings.find(l => l.id === parentId);
+      if (!parent) return null;
+      return {
+        ...parent,
+        id,
+        gpu: { ...parent.gpu, count: 1, vramGB: Math.floor(parent.gpu.vramGB / 2) },
+        pricePerHour: (parent.pricePerHour / parent.gpu.count) * 0.55 * 1.10,
+        interconnect: 'pcie' as const,
+        interconnectLabel: 'Virtual',
+        interconnectBandwidth: 0,
+        accessType: 'slice' as const,
+      };
+    }
+    return null;
+  }, [id]);
+
+  const listing = derivedListing || listings.find(l => l.id === id) || null;
 
   const [duration, setDuration] = useState('24');
   const [selectedImage, setSelectedImage] = useState(listing?.images[0]?.id || '');

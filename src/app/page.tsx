@@ -22,8 +22,8 @@ const navLinks = [
 const demandSteps = [
   {
     number: '01',
-    title: 'Browse catalogue',
-    description: 'Filter by GPU model, region, interconnect, and price. See real benchmarks before you commit.',
+    title: 'Pick your access level',
+    description: 'Bare metal for full nodes, virtual GPUs for multi-GPU VMs, or GPU slices for lightweight workloads.',
   },
   {
     number: '02',
@@ -33,7 +33,7 @@ const demandSteps = [
   {
     number: '03',
     title: 'Pay for what you use',
-    description: 'Per-hour billing with managed model deployment. No commitments, no reserved-instance lock-in.',
+    description: 'Per-hour billing from $0.35/hr for a GPU slice to $32/hr for a full 8xH100 node. No commitments.',
   },
 ];
 
@@ -125,7 +125,7 @@ export default function LandingPage() {
             transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             className="mt-5 font-mono text-lg text-accent"
           >
-            Spin up an 8xH100 node in minutes. Not Q3.
+            Spin up an 8xH100 node in minutes. Or just a single GPU slice.
           </motion.p>
 
           <motion.p
@@ -134,8 +134,8 @@ export default function LandingPage() {
             transition={{ duration: 0.5, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-secondary"
           >
-            Nava aggregates idle GPU supply from operators, startups, and labs — and routes it to
-            teams that need bare-metal SSH access for hours, days, or weeks.
+            Nava aggregates idle GPU supply from operators, startups, and labs. Rent bare-metal nodes,
+            virtual multi-GPU VMs, or single GPU slices — from hours to weeks, with SSH or managed model deployment.
           </motion.p>
 
           <motion.div
@@ -185,6 +185,52 @@ export default function LandingPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Access Types ── */}
+      <section className="mx-auto max-w-5xl px-6 py-16">
+        <h2 className="text-center text-2xl font-semibold tracking-tight">Three ways to access GPUs</h2>
+        <p className="text-center text-sm text-secondary mt-3 max-w-lg mx-auto">
+          From full bare-metal nodes to fractional GPU slices. Pick the access level that fits your workload and budget.
+        </p>
+        <div className="mt-10 grid md:grid-cols-3 gap-4">
+          <div className="rounded-[10px] border border-border-subtle bg-surface p-5 space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-accent/15 text-accent border border-accent/30">Bare Metal</span>
+            </div>
+            <h3 className="text-sm font-medium text-primary">Full dedicated nodes</h3>
+            <p className="text-xs text-secondary leading-relaxed">
+              Exclusive access to entire GPU servers. Root SSH, NVLink topology, no noisy neighbors. For training runs and large-scale inference.
+            </p>
+            <div className="pt-2 border-t border-border-subtle">
+              <span className="font-mono text-xs text-tertiary">From $2.20/hr per GPU</span>
+            </div>
+          </div>
+          <div className="rounded-[10px] border border-border-subtle bg-surface p-5 space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#3B82F6]/15 text-[#3B82F6] border border-[#3B82F6]/30">Virtual GPU</span>
+            </div>
+            <h3 className="text-sm font-medium text-primary">Multi-GPU virtual machines</h3>
+            <p className="text-xs text-secondary leading-relaxed">
+              1x, 2x, or 4x GPUs carved from larger nodes. Isolated VMs with dedicated VRAM. For fine-tuning and medium inference.
+            </p>
+            <div className="pt-2 border-t border-border-subtle">
+              <span className="font-mono text-xs text-tertiary">From $2.40/hr per GPU</span>
+            </div>
+          </div>
+          <div className="rounded-[10px] border border-border-subtle bg-surface p-5 space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#A855F7]/15 text-[#A855F7] border border-[#A855F7]/30">GPU Slice</span>
+            </div>
+            <h3 className="text-sm font-medium text-primary">Fractional GPU access</h3>
+            <p className="text-xs text-secondary leading-relaxed">
+              Half-GPU slices with dedicated VRAM. For development, small model inference, and cost-sensitive workloads.
+            </p>
+            <div className="pt-2 border-t border-border-subtle">
+              <span className="font-mono text-xs text-tertiary">From $0.35/hr per slice</span>
+            </div>
           </div>
         </div>
       </section>
